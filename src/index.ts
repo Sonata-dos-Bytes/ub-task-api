@@ -1,20 +1,18 @@
-import express, { Application } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express from 'express';
+
+import { PORT } from './config';
+import { setupServer } from './config/server';
+
 import appRouter from './routes/app.route';
 import ubRouter from './routes/ub.route';
 
-dotenv.config();
+const app = express();
 
-const app: Application = express();
-const PORT = process.env.PORT || 3000;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
-
-app.use(cors({ origin: CORS_ORIGIN }));
+setupServer(app);
 
 app.use(appRouter);
 app.use(ubRouter);
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
