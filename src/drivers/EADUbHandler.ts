@@ -1,9 +1,9 @@
 import puppeteer, { Browser, Page, LaunchOptions } from 'puppeteer';
-import { CustomError } from '../errors/error_types/CustomError';
+import { CustomError } from '@errors/error_types/CustomError';
 import { BaseHandler } from './BaseHandler';
 import { PuppeteerResult } from '../types/puppeteer';
-import { logger } from '../config/logger';
-
+import { logger } from '@config/logger';
+import { UBProfile } from '../types/eadUb';
 export class EADUbHandler extends BaseHandler {
     private urls = {
         login: 'https://ead.unibalsas.edu.br/login/index.php',
@@ -38,7 +38,7 @@ export class EADUbHandler extends BaseHandler {
         return { browser, page };
     }
 
-    public async getProfile(login: string, password: string): Promise<any> {
+    public async getProfile(login: string, password: string): Promise<UBProfile> {
         const { browser, page } = await this.webLogin(login, password);
         try {
             logger.info('Navegando para perfil do usuário', { url: this.urls.profile });

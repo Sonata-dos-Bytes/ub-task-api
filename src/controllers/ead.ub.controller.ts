@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import {
   fetchUbProfile,
 } from '../scrapers/ead.ub.scraper';
-import { CustomError } from '../errors/error_types/CustomError';
+import { success, failure } from '@utils/response';
+import { CustomError } from '@errors/error_types/CustomError';
 
 /**
  * POST /ub/profile
@@ -20,7 +21,7 @@ export async function getProfile(
 
   try {
     const profile = await fetchUbProfile(login, password);
-    return res.json({ success: true, data: profile });
+    return res.json(success('Profile fetched successfully', profile));
   } catch (err) {
     return next(err);
   }
