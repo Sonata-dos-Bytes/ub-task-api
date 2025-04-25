@@ -76,5 +76,26 @@ export class EADUbHandler extends BaseHandler {
             logger.info('Browser fechado após busca de perfil');
         }
     }
+
+    public async getTasks(login: string, password: string): Promise<any> {
+        const { browser, page } = await this.webLogin(login, password);
+        try {
+            logger.info('Navegando para tarefas do usuário', { url: this.urls.tasks });
+            await page.goto(this.urls.tasks, { waitUntil: 'domcontentloaded' });
+
+            const tasks = await page.$$eval('.calendarwrapper a.btn.dbxshad.btn-sm.btn-thm.circle.white', els => {
+                return (els as HTMLAnchorElement[]).map(el => el.href);
+            });
+
+            logger.info({ tasks }, 'Tarefas obtidas com sucesso');
+            return tasks;
+        } catch (err) {
+            logger.error({ err }, 'Erro ao buscar tarefas');
+            throw new CustomError('Tasks fetch failed', 'Unable to parse tasks data');
+        } finally {
+            await browser.close();
+            logger.info('Browser fechado após busca de tarefas');
+        }
+    }
 }
 
