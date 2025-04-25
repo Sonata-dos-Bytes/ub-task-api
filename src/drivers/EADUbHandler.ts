@@ -4,6 +4,8 @@ import { BaseHandler } from './BaseHandler';
 import { PuppeteerResult } from '../types/puppeteer';
 import { logger } from '@config/logger';
 import { UBProfile } from '../types/eadUb';
+import { parse } from 'date-fns';
+import { pt } from 'date-fns/locale';
 export class EADUbHandler extends BaseHandler {
     private urls = {
         login: 'https://ead.unibalsas.edu.br/login/index.php',
@@ -83,9 +85,40 @@ export class EADUbHandler extends BaseHandler {
             logger.info('Navegando para tarefas do usuário', { url: this.urls.tasks });
             await page.goto(this.urls.tasks, { waitUntil: 'domcontentloaded' });
 
-            const tasks = await page.$$eval('.calendarwrapper a.btn.dbxshad.btn-sm.btn-thm.circle.white', els => {
+            const tasksRef = await page.$$eval('.calendarwrapper a.btn.dbxshad.btn-sm.btn-thm.circle.white', els => {
                 return (els as HTMLAnchorElement[]).map(el => el.href);
             });
+
+            const tasks: any = [];
+
+            for (const [index, taskUrl] of tasksRef.entries()) {
+                logger.info({ url: taskUrl }, `Navegando para tarefa ${index + 1}`);
+
+                await page.goto(taskUrl, { waitUntil: 'domcontentloaded' });
+
+                const title = await page.$eval(
+                    '.page-context-header .page-header-headings h1.h2.ccnMdlHeading',
+                    (el: HTMLElement) => el.textContent?.trim() || 'Tarefa sem título'
+                );
+
+                const [rawStart, rawEnd] = await page.$$eval(
+                    '.description-inner > div',
+                    divs => divs.map(div => div.textContent?.trim() || '')
+                  );
+
+                const dateStartObj = parse(rawStart, "EEEE, d MMM. yyyy, HH:mm", new Date(), { locale: pt });
+                const dateEndObj   = parse(rawEnd,   "EEEE, d MMM. yyyy, HH:mm", new Date(), { locale: pt });
+
+                tasks.push({
+                    title,
+                    url: taskUrl,
+                    rawStart,
+                    dateStart: dateStartObj,
+                    rawEnd,
+                    dateEnd: dateEndObj,
+                });
+
+            }
 
             logger.info({ tasks }, 'Tarefas obtidas com sucesso');
             return tasks;
