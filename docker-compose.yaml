@@ -8,11 +8,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - CORS_ORIGIN=*
-      - TTL_CACHE=3600
-      - LOG_LEVEL=debug
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - TTL_CACHE=${TTL_CACHE}
+      - LOG_LEVEL=${LOG_LEVEL}
     volumes:
       - .:/app
       - /app/node_modules
