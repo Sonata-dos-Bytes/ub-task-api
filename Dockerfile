@@ -2,17 +2,20 @@ FROM node:18-alpine
 
 # Instalar dependências do Chromium
 RUN apk add --no-cache \
-    libnss3 \
-    libatk \
-    libatk-bridge2.0 \
-    libcups \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    alsa-lib \
     libxcomposite \
     libxrandr \
     libxdamage \
     libxkbcommon \
-    libgbm \
-    pango \
-    alsa-lib
+    libstdc++ \
+    libc6-compat \
+    libgcc
 
 WORKDIR /app
 COPY package*.json ./
