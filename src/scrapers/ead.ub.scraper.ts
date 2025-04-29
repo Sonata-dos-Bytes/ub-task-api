@@ -1,5 +1,5 @@
-import { UBProfile, UBTask } from '../types/eadUb';
-import { EADUbHandler } from '../drivers/EADUbHandler';
+import { UBProfile, UBTask } from '../types/eadUB';
+import { EADUbHandler } from '../drivers/EADUBHandler';
 
 const handler = new EADUbHandler();
 

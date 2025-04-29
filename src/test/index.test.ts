@@ -1,5 +1,5 @@
-import { UBProfile } from '../types/eadUb';
-import { EADUbHandler } from '../drivers/EADUbHandler';
+import { UBProfile } from '../types/eadUB';
+import { EADUbHandler } from '../drivers/EADUBHandler';
 import dotenv from 'dotenv';
 
 dotenv.config();

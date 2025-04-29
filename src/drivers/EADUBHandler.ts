@@ -3,7 +3,7 @@ import { CustomError } from '@errors/error_types/CustomError';
 import { BaseHandler } from './BaseHandler';
 import { PuppeteerResult } from '../types/puppeteer';
 import { logger } from '@config/logger';
-import { UBProfile, UBTask } from '../types/eadUb';
+import { UBProfile, UBTask } from '../types/eadUB';
 import { getTaskDeadlineInfo, parsePortugueseDate } from '@utils/formattedDate';
 export class EADUbHandler extends BaseHandler {
     private urls = {
