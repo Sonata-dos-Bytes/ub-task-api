@@ -3,7 +3,7 @@ import { CustomError } from '@errors/error_types/CustomError';
 import { BaseHandler } from './BaseHandler';
 import { PuppeteerResult } from '../types/puppeteer';
 import { logger } from '@config/logger';
-import { UBProfile } from '../types/eadUb';
+import { UBProfile, UBTask } from '../types/eadUb';
 import { getTaskDeadlineInfo, parsePortugueseDate } from '@utils/formattedDate';
 export class EADUbHandler extends BaseHandler {
     private urls = {
@@ -30,7 +30,7 @@ export class EADUbHandler extends BaseHandler {
         if (page.url().includes('login')) {
             logger.warn('Credenciais inválidas, fechando browser');
             await browser.close();
-            throw new CustomError('Unauthorized', 'Invalid login credentials', 401);
+            throw new CustomError('Unauthorized', ['Invalid login credentials'], 401);
         }
 
         logger.info('Login realizado com sucesso', { url: page.url() });
@@ -71,14 +71,14 @@ export class EADUbHandler extends BaseHandler {
             return data;
         } catch (err) {
             logger.error({ err }, 'Erro ao buscar perfil');
-            throw new CustomError('Profile fetch failed', 'Unable to parse profile data');
+            throw new CustomError('Profile fetch failed', ['Unable to parse profile data']);
         } finally {
             await browser.close();
             logger.info('Browser fechado após busca de perfil');
         }
     }
 
-    public async getTasks(login: string, password: string): Promise<any> {
+    public async getTasks(login: string, password: string): Promise<UBTask[]> {
         const { browser, page } = await this.webLogin(login, password);
         try {
             logger.info('Navegando para tarefas do usuário', { url: this.urls.tasks });
@@ -142,7 +142,7 @@ export class EADUbHandler extends BaseHandler {
             return tasks;
         } catch (err) {
             logger.error({ err }, 'Erro ao buscar tarefas');
-            throw new CustomError('Tasks fetch failed', 'Unable to parse tasks data');
+            throw new CustomError('Tasks fetch failed', ['Unable to parse tasks data']);
         } finally {
             await browser.close();
             logger.info('Browser fechado após busca de tarefas');
