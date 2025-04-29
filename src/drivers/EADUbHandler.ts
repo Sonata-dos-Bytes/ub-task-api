@@ -4,8 +4,7 @@ import { BaseHandler } from './BaseHandler';
 import { PuppeteerResult } from '../types/puppeteer';
 import { logger } from '@config/logger';
 import { UBProfile } from '../types/eadUb';
-import { parse } from 'date-fns';
-import { pt } from 'date-fns/locale';
+import { getTaskDeadlineInfo, parsePortugueseDate } from '@utils/formattedDate';
 export class EADUbHandler extends BaseHandler {
     private urls = {
         login: 'https://ead.unibalsas.edu.br/login/index.php',
@@ -104,10 +103,26 @@ export class EADUbHandler extends BaseHandler {
                 const [rawStart, rawEnd] = await page.$$eval(
                     '.description-inner > div',
                     divs => divs.map(div => div.textContent?.trim() || '')
-                  );
+                );
 
-                const dateStartObj = parse(rawStart, "EEEE, d MMM. yyyy, HH:mm", new Date(), { locale: pt });
-                const dateEndObj   = parse(rawEnd,   "EEEE, d MMM. yyyy, HH:mm", new Date(), { locale: pt });
+                const taskDetails = await page.$eval(
+                    '.box.py-3.generalbox.boxaligncenter',
+                    el => (el as HTMLElement).outerHTML
+                );
+
+                const submissionsummarytable = await page.$$eval(
+                    '.cell.c1.lastcol',
+                    els => els.map(el => (el as HTMLElement).textContent?.trim() || '')
+                );
+
+                const isCompleted = !submissionsummarytable[0].includes('Nenhum envio foi feito ainda');
+
+                const dateDetailsInPortuguese = submissionsummarytable[2];
+
+                const dateStartObj = parsePortugueseDate(rawStart);
+                const dateEndObj = parsePortugueseDate(rawEnd);
+
+                const dateDetails = dateEndObj ? getTaskDeadlineInfo(dateEndObj, isCompleted) : null;
 
                 tasks.push({
                     title,
@@ -116,8 +131,11 @@ export class EADUbHandler extends BaseHandler {
                     dateStart: dateStartObj,
                     rawEnd,
                     dateEnd: dateEndObj,
+                    daysLeft: dateDetails?.daysLeft || null,
+                    status: dateDetails?.status || null,
+                    dateDetailsInPortuguese: dateDetailsInPortuguese,
+                    taskDetails,
                 });
-
             }
 
             logger.info({ tasks }, 'Tarefas obtidas com sucesso');
