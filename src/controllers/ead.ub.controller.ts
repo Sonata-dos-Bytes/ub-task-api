@@ -4,6 +4,8 @@ import {
 } from '../scrapers/ead.ub.scraper';
 import { success, failure } from '@utils/response';
 import { CustomError } from '@errors/error_types/CustomError';
+import { z } from 'zod';
+import { profileSchema } from '@schemas/ead.ub.schema';
 
 /**
  * POST /ub/profile
@@ -14,12 +16,8 @@ export async function getProfile(
   res: Response,
   next: NextFunction
 ) {
-  const { login, password } = req.body;
-  if (!login || !password) {
-    return next(new CustomError('Missing credentials', 'login and password are required', 400));
-  }
-
   try {
+    const { login, password } = profileSchema.parse(req.body);
     const profile = await fetchUbProfile(login, password);
     return res.json(success('Profile fetched successfully', profile));
   } catch (err) {

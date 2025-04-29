@@ -3,10 +3,6 @@ import { getProfile } from '../../controllers/ead.ub.controller'; // Adjust the 
 
 const router = Router();
 
-router.get('/ead-ub', (req: Request, res: Response) => {
-  res.send('Hello from EAD UB Route!');
-});
-
 router.post('/ead-ub/profile', (req: Request, res: Response, next: NextFunction) => {
   getProfile(req, res, next).catch(next);
 });
