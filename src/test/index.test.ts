@@ -24,5 +24,5 @@ export async function fetchUbTasks(
     return handler.getTasks(login, password);
   }
 
-fetchUbProfile(LOGIN_TEST, PASSWORD_TEST);
-// fetchUbTasks(LOGIN_TEST, PASSWORD_TEST);
+// fetchUbProfile(LOGIN_TEST, PASSWORD_TEST);
+fetchUbTasks(LOGIN_TEST, PASSWORD_TEST);
