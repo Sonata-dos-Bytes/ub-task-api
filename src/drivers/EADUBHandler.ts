@@ -113,6 +113,16 @@ export class EADUbHandler extends BaseHandler {
                     (el: HTMLElement) => el.textContent?.trim() || 'Tarefa sem título'
                 );
 
+                const matter = await page.$eval(
+                    'h4.breadcrumb_title',
+                    (el: HTMLElement) => el.textContent?.trim() || 'Tarefa sem máteria'
+                );
+
+                const matterUrl = await page.$eval(
+                    'li.breadcrumb-item:nth-child(3) a',
+                    (a) => (a as HTMLAnchorElement).href
+                );
+
                 const [rawStart, rawEnd] = await page.$$eval(
                     '.description-inner > div',
                     divs => divs.map(div => div.textContent?.trim() || '')
@@ -139,7 +149,9 @@ export class EADUbHandler extends BaseHandler {
 
                 tasks.push({
                     title,
+                    matter,
                     url: taskUrl,
+                    matterUrl,
                     rawStart,
                     dateStart: dateStartObj,
                     rawEnd,

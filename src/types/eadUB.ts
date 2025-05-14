@@ -10,7 +10,9 @@ export interface UBProfile {
 
 export interface UBTask {
   title: string;
+  matter: string;
   url: string;
+  matterUrl: string;
   rawStart: string;
   dateStart: Date;
   rawEnd: string;
