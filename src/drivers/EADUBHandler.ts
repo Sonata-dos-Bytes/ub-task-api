@@ -48,23 +48,36 @@ export class EADUbHandler extends BaseHandler {
                 els => els.map(el => el.textContent?.trim() || '')
             );
 
-            const imgSrc = await page.$eval(
-                '.page-header-image img, .instructor_thumb img',
-                (img: HTMLImageElement) => img.src
-            );
-
             const [first, second, ...rest] = details;
             const name = `${first} ${second}`;
             const initials = [first, second].length >= 2
                 ? first[0] + second[0]
                 : name.slice(0, 2);
 
+            const imgSrc = await page.$eval(
+                '.page-header-image img, .instructor_thumb img',
+                (img: HTMLImageElement) => img.src
+            );
+
+            const imgResponse = await page.goto(imgSrc, {
+                waitUntil: 'networkidle2',
+                timeout: 15000
+            });
+            if (!imgResponse || !imgResponse.ok()) {
+                throw new CustomError('ImageFetchError', ['Não foi possível baixar a imagem']);
+            }
+
+            const buffer = await imgResponse.buffer();
+            const contentType = imgResponse.headers()['content-type'] || 'image/png';
+            const base64 = buffer.toString('base64');
+            const dataUri = `data:${contentType};base64,${base64}`;
+
             const data = {
                 name,
                 email: details[5] || '',
                 language: details[2] || '',
                 user_initials: initials.toUpperCase(),
-                user_picture: imgSrc,
+                user_picture: dataUri,
             };
 
             logger.info({ data }, 'Dados de perfil formatados');
