@@ -76,8 +76,8 @@ export class EADUbHandler extends BaseHandler {
                 name,
                 email: details[5] || '',
                 language: details[2] || '',
-                user_initials: initials.toUpperCase(),
-                user_picture: dataUri,
+                userInitials: initials.toUpperCase(),
+                userPicture: dataUri,
             };
 
             logger.info({ data }, 'Dados de perfil formatados');
