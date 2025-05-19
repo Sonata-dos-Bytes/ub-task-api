@@ -14,28 +14,41 @@ export class EADUbHandler extends BaseHandler {
 
     private async webLogin(login: string, password: string): Promise<PuppeteerResult> {
         logger.info({ login }, 'Iniciando login no EAD UB');
-
         const browser: Browser = await this['launchBrowser']();
-        const page = await browser.newPage();
-        await page.setUserAgent(
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        );
-        await page.goto(this.urls.login, { waitUntil: 'networkidle2', timeout: 15000 });
+        let page: Page | undefined;
 
-        await page.type('input[name="username"]', login);
-        await page.type('input[name="password"]', password);
-        await page.click('button[type="submit"]');
-        await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 });
+        try {
+            page = await browser.newPage();
+            await page.setUserAgent(
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            );
+            await page.goto(this.urls.login, { waitUntil: 'networkidle2', timeout: 15000 });
 
-        if (page.url().includes('login')) {
-            logger.warn('Credenciais inválidas, fechando browser');
-            await browser.close();
-            throw new CustomError('Unauthorized', ['Invalid login credentials'], 401);
+            await page.type('input[name="username"]', login);
+            await page.type('input[name="password"]', password);
+
+            await Promise.all([
+                page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }),
+                page.click('button[type="submit"]'),
+            ]);
+
+            if (page.url().includes('login')) {
+                logger.warn('Credenciais inválidas, fechando browser');
+                throw new CustomError('Unauthorized', ['Invalid login credentials'], 401);
+            }
+
+            logger.info('Login realizado com sucesso', { url: page.url() });
+            return { browser, page };
+        } catch (err) {
+            logger.error('Erro no fluxo de login', err);
+            throw err;
+        } finally {
+            if (!page || page.url().includes('login')) {
+                await browser.close();
+            }
         }
-
-        logger.info('Login realizado com sucesso', { url: page.url() });
-        return { browser, page };
     }
+
 
     public async getProfile(login: string, password: string): Promise<UBProfile> {
         const { browser, page } = await this.webLogin(login, password);

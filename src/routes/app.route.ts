@@ -9,8 +9,8 @@ router.get('/', (req: Request, res: Response) => {
         "message": "Welcome to the UB API!",
         "data": {
             "contact": {
-                "email_personal": "pedro.henrique.martins404@gmail.com",
-                "email_academic": "pedro.borges@alu.unibalsas.edu.br",
+                "emailPersonal": "pedro.henrique.martins404@gmail.com",
+                "emailAcademic": "pedro.borges@alu.unibalsas.edu.br",
                 "github": "https://github.com/orgs/Sonata-dos-Bytes/repositories",
             },
             "version": "4.0.0v"
