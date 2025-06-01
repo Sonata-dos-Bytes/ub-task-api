@@ -34,7 +34,10 @@
       ],
       "@types/*": [
         "src/types/*"
-      ]
+      ],
+      "@schemas/*": [
+        "src/schemas/*"
+      ],
     },
     "strict": true,
     "esModuleInterop": true,

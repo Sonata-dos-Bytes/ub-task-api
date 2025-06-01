@@ -18,11 +18,11 @@ export function success<T>(message = 'Success', data?: T): ApiResponse<T> {
  * @param message - mensagem do erro
  * @param error - descrição interna do erro
  */
-export function failure(message: string, error?: string): ApiResponse<null> {
+export function failure(message: string, errors?: string[]): ApiResponse<null> {
   return {
     status: false,
     message,
     data: null,
-    error,
+    errors,
   };
 }

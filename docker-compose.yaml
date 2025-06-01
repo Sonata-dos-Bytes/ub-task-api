@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - TTL_CACHE=${TTL_CACHE}
+      - LOG_LEVEL=${LOG_LEVEL}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev

@@ -8,7 +8,7 @@ export class BaseHandler {
       const options: LaunchOptions = await getPuppeteerOptions();
       return await puppeteer.launch(options);
     } catch (err) {
-      throw new CustomError('Browser launch failed', 'Unable to start headless browser');
+      throw new CustomError('Browser launch failed', ['Unable to start headless browser']);
     }
   }
 }
