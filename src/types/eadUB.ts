@@ -13,12 +13,12 @@ export interface UBTask {
   matter: string;
   url: string;
   matterUrl: string;
-  rawStart: string;
-  dateStart: Date;
+  rawStart: string | null;
+  dateStart: Date | null;
   rawEnd: string;
   dateEnd: Date;
   daysLeft: number;
   status: StatusTask;
-  dateDetailsInPortuguese: string;
-  taskDetails: string;
+  dateDetailsInPortuguese: string | null;
+  taskDetails: string | null;
 }
