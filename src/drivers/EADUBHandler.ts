@@ -5,6 +5,8 @@ import { PuppeteerResult } from '../types/puppeteer';
 import { logger } from '@config/logger';
 import { UBProfile, UBTask } from '../types/eadUB';
 import { getTaskDeadlineInfo, parsePortugueseDate } from '@utils/formattedDate';
+import { extractCommonFields, extractQuestionnaireFields, extractTaskFields } from '@services/eadUbTaskService';
+import { url } from 'inspector';
 export class EADUbHandler extends BaseHandler {
     private urls = {
         login: 'https://ead.unibalsas.edu.br/login/index.php',
@@ -121,62 +123,48 @@ export class EADUbHandler extends BaseHandler {
 
                 await page.goto(taskUrl, { waitUntil: 'domcontentloaded' });
 
-                const title = await page.$eval(
-                    '.page-context-header .page-header-headings h1.h2.ccnMdlHeading',
-                    (el: HTMLElement) => el.textContent?.trim() || 'Tarefa sem título'
+                const type = await page.$eval(
+                    '.text-muted.text-uppercase.small.line-height-3',
+                    el => (el as HTMLElement).textContent?.trim() || 'Tarefa sem título'
                 );
 
-                const matter = await page.$eval(
-                    'h4.breadcrumb_title',
-                    (el: HTMLElement) => el.textContent?.trim() || 'Tarefa sem máteria'
-                );
+                const { title, matter, matterUrl } = await extractCommonFields(page);
 
-                const matterUrl = await page.$eval(
-                    'li.breadcrumb-item:nth-child(3) a',
-                    (a) => (a as HTMLAnchorElement).href
-                );
-
-                const [rawStart, rawEnd] = await page.$$eval(
-                    '.description-inner > div',
-                    divs => divs.map(div => div.textContent?.trim() || '')
-                );
-
-                const taskDetails = await page.$eval(
-                    '.box.py-3.generalbox.boxaligncenter',
-                    el => (el as HTMLElement).outerHTML
-                );
-
-                const submissionsummarytable = await page.$$eval(
-                    '.cell.c1.lastcol',
-                    els => els.map(el => (el as HTMLElement).textContent?.trim() || '')
-                );
-
-                const isCompleted = !submissionsummarytable[0].includes('Nenhum envio foi feito ainda');
-
-                const dateDetailsInPortuguese = submissionsummarytable[2];
-
-                const dateStartObj = parsePortugueseDate(rawStart);
-                const dateEndObj = parsePortugueseDate(rawEnd);
-
-                const dateDetails = dateEndObj ? getTaskDeadlineInfo(dateEndObj, isCompleted) : null;
-
-                tasks.push({
-                    title,
-                    matter,
-                    url: taskUrl,
-                    matterUrl,
-                    rawStart,
-                    dateStart: dateStartObj,
-                    rawEnd,
-                    dateEnd: dateEndObj,
-                    daysLeft: dateDetails?.daysLeft || null,
-                    status: dateDetails?.status || null,
-                    dateDetailsInPortuguese: dateDetailsInPortuguese,
-                    taskDetails,
-                });
+                if (type === 'Tarefa') {
+                    const { rawStart, rawEnd, dateStartObj, dateEndObj, dateDetails, dateDetailsInPortuguese, taskDetails } = await extractTaskFields(page);
+                    
+                    tasks.push({
+                        title,
+                        matter,
+                        url: taskUrl,
+                        matterUrl,
+                        rawStart,
+                        dateStart: dateStartObj,
+                        rawEnd,
+                        dateEnd: dateEndObj,
+                        daysLeft: dateDetails?.daysLeft || null,
+                        status: dateDetails?.status || null,
+                        dateDetailsInPortuguese: dateDetailsInPortuguese,
+                        taskDetails,
+                    });
+                } else if (type === 'Questionário') {
+                    const { rawEnd, dateEndObj, dateDetails, taskDetails } = await extractQuestionnaireFields(page);
+                    
+                    tasks.push({
+                        title,
+                        matter,
+                        url: taskUrl,
+                        matterUrl,
+                        rawEnd,
+                        dateEnd: dateEndObj,
+                        daysLeft: dateDetails?.daysLeft || null,
+                        status: dateDetails?.status || null,
+                        taskDetails,
+                    });
+                }
             }
 
-            logger.info({ tasks }, 'Tarefas obtidas com sucesso');
+            logger.info('Tarefas obtidas com sucesso');
             return tasks;
         } catch (err) {
             logger.error({ err }, 'Erro ao buscar tarefas');
