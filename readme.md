@@ -132,9 +132,10 @@ Retorna status, mensagem de boas-vindas e dados de contato.
 
 ## 📒 Sobre
 
-Desenvolvido por Pedro Henrique Martins.  
+Desenvolvido por Sonata dos Bytes.  
 Contato: pedro.henrique.martins404@gmail.com  
-Repositório: https://github.com/Sonata-dos-Bytes/ub-task-api  
+Repositório: https://github.com/Sonata-dos-Bytes/ub-task-app
+
 
 _License: MIT_
 
