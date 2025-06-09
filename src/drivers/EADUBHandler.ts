@@ -3,7 +3,7 @@ import { CustomError } from '@errors/error_types/CustomError';
 import { BaseHandler } from './BaseHandler';
 import { PuppeteerResult } from '../types/puppeteer';
 import { logger } from '@config/logger';
-import { UBProfile, UBTask } from '../types/eadUB';
+import { UBMatter, UBProfile, UBTask } from '../types/eadUB';
 import { getTaskDeadlineInfo, parsePortugueseDate } from '@utils/formattedDate';
 import { extractCommonFields, extractQuestionnaireFields, extractTaskFields } from '@services/eadUbTaskService';
 import { url } from 'inspector';
@@ -12,6 +12,7 @@ export class EADUbHandler extends BaseHandler {
         login: 'https://ead.unibalsas.edu.br/login/index.php',
         profile: 'https://ead.unibalsas.edu.br/user/profile.php',
         tasks: 'https://ead.unibalsas.edu.br/calendar/view.php?view=upcoming',
+        matters: 'https://ead.unibalsas.edu.br/my/',
     }
 
     private async webLogin(login: string, password: string): Promise<PuppeteerResult> {
@@ -109,62 +110,92 @@ export class EADUbHandler extends BaseHandler {
     public async getTasks(login: string, password: string): Promise<UBTask[]> {
         const { browser, page } = await this.webLogin(login, password);
         try {
-            logger.info('Navegando para tarefas do usuário', { url: this.urls.tasks });
-            await page.goto(this.urls.tasks, { waitUntil: 'domcontentloaded' });
+            logger.info('Navegando para as matérias do usuário', { url: this.urls.matters });
+            await page.goto(this.urls.matters, { waitUntil: 'domcontentloaded' });
+            await page.waitForSelector('.mc_content_list', { timeout: 10000 });
+            
+            const tasks: UBTask[] = [];
 
-            const tasksRef = await page.$$eval('.calendarwrapper a.btn.dbxshad.btn-sm.btn-thm.circle.white', els => {
+            const mattersRef = await page.$$eval('.mcc_view', els => {
                 return (els as HTMLAnchorElement[]).map(el => el.href);
             });
 
-            const tasks: any = [];
+            for (const [index, matterUrl] of mattersRef.entries()) {
+                logger.info({ url: matterUrl }, `Navegando para matéria ${index + 1}`);
+                await page.goto(matterUrl, { waitUntil: 'domcontentloaded' });
 
-            for (const [index, taskUrl] of tasksRef.entries()) {
-                logger.info({ url: taskUrl }, `Navegando para tarefa ${index + 1}`);
+                const tasksRef = await page.$$eval('.activitytitle.media.modtype_assign.position-relative.align-self-start', (elements) => {
+                    return elements.map(el => {
+                        const img = el.querySelector('.activityiconcontainer img.activityicon') as HTMLImageElement | null;
+                        const link = el.querySelector('.activityname a.aalink.stretched-link') as HTMLAnchorElement | null;
 
-                await page.goto(taskUrl, { waitUntil: 'domcontentloaded' });
+                        if (img && img.src.includes('green.png') && link) {
+                            return link.href;
+                        }
 
-                const type = await page.$eval(
-                    '.text-muted.text-uppercase.small.line-height-3',
-                    el => (el as HTMLElement).textContent?.trim() || 'Tarefa sem título'
-                );
+                        return null;
+                    }).filter((href): href is string => href !== null);
+                });
 
-                const { title, matter, matterUrl } = await extractCommonFields(page);
+                logger.info({ tasksCount: tasksRef.length }, `Encontradas ${tasksRef.length} tarefas na matéria`);
 
-                if (type === 'Tarefa') {
-                    const { rawStart, rawEnd, dateStartObj, dateEndObj, dateDetails, dateDetailsInPortuguese, taskDetails } = await extractTaskFields(page);
-                    
-                    tasks.push({
-                        title,
-                        matter,
-                        url: taskUrl,
-                        matterUrl,
-                        rawStart,
-                        dateStart: dateStartObj,
-                        rawEnd,
-                        dateEnd: dateEndObj,
-                        daysLeft: dateDetails?.daysLeft || null,
-                        status: dateDetails?.status || null,
-                        dateDetailsInPortuguese: dateDetailsInPortuguese,
-                        taskDetails,
-                    });
-                } else if (type === 'Questionário') {
-                    const { rawEnd, dateEndObj, dateDetails, taskDetails } = await extractQuestionnaireFields(page);
-                    
-                    tasks.push({
-                        title,
-                        matter,
-                        url: taskUrl,
-                        matterUrl,
-                        rawEnd,
-                        dateEnd: dateEndObj,
-                        daysLeft: dateDetails?.daysLeft || null,
-                        status: dateDetails?.status || null,
-                        taskDetails,
-                    });
+                for (const [index, taskUrl] of tasksRef.entries()) {
+                    logger.info({ url: taskUrl }, `Navegando para tarefa ${index + 1}`);
+
+                    await page.goto(taskUrl, { waitUntil: 'domcontentloaded' });
+
+                    const type = await page.$eval(
+                        '.text-muted.text-uppercase.small.line-height-3',
+                        el => (el as HTMLElement).textContent?.trim() || 'Tarefa sem título'
+                    );
+
+                    const { title, matter, matterUrl } = await extractCommonFields(page);
+
+                    if (type === 'Tarefa') {
+                        const { rawStart, rawEnd, dateStartObj, dateEndObj, dateDetails, dateDetailsInPortuguese, taskDetails } = await extractTaskFields(page);
+
+                        tasks.push({
+                            title,
+                            matter,
+                            url: taskUrl,
+                            matterUrl,
+                            rawStart,
+                            dateStart: dateStartObj,
+                            rawEnd,
+                            dateEnd: dateEndObj || null,
+                            daysLeft: dateDetails?.daysLeft || null,
+                            status: dateDetails?.status || null,
+                            dateDetailsInPortuguese: dateDetailsInPortuguese,
+                            taskDetails,
+                        });
+                    } else if (type === 'Questionário') {
+                        const { rawEnd, dateEndObj, dateDetails, taskDetails } = await extractQuestionnaireFields(page);
+
+                        tasks.push({
+                            title,
+                            matter,
+                            url: taskUrl,
+                            matterUrl,
+                            rawStart: '',
+                            dateStart: null,
+                            rawEnd,
+                            dateEnd: dateEndObj,
+                            daysLeft: dateDetails?.daysLeft || null,
+                            status: dateDetails?.status || null,
+                            dateDetailsInPortuguese: '',
+                            taskDetails,
+                        });
+                    }
                 }
+
             }
 
             logger.info('Tarefas obtidas com sucesso');
+            tasks.sort((a, b) => {
+                if (!a.dateEnd) return 1; 
+                if (!b.dateEnd) return -1;
+                return a.dateEnd.getTime() - b.dateEnd.getTime();
+            });
             return tasks;
         } catch (err) {
             logger.error({ err }, 'Erro ao buscar tarefas');
@@ -172,6 +203,42 @@ export class EADUbHandler extends BaseHandler {
         } finally {
             await browser.close();
             logger.info('Browser fechado após busca de tarefas');
+        }
+    }
+
+    public async getMatters(login: string, password: string): Promise<UBMatter[]> {
+        const { browser, page } = await this.webLogin(login, password);
+        try {
+            logger.info('Navegando para as matérias do usuário', { url: this.urls.matters });
+            await page.goto(this.urls.matters, { waitUntil: 'domcontentloaded' });
+            await page.waitForSelector('.mc_content_list', { timeout: 10000 });
+
+            const matters: UBMatter[] = [];
+
+            const mattersRef = await page.$$eval('.mcc_view', els => {
+                return (els as HTMLAnchorElement[]).map(el => el.href);
+            });
+
+            for (const [index, matterUrl] of mattersRef.entries()) {
+                logger.info({ url: matterUrl }, `Navegando para matéria ${index + 1}`);
+                await page.goto(matterUrl, { waitUntil: 'domcontentloaded' });
+
+                const title = await page.$eval('.breadcrumb_title', el => (el as HTMLElement).textContent?.trim() || 'Matéria sem título');
+
+                matters.push({
+                    title,
+                    url: matterUrl,
+                });
+            }
+
+            logger.info('Matérias obtidas com sucesso');
+            return matters;
+        } catch (err) {
+            logger.error({ err }, 'Erro ao buscar matérias');
+            throw new CustomError('Matters fetch failed', ['Unable to parse matters data']);
+        } finally {
+            await browser.close();
+            logger.info('Browser fechado após busca de matérias');
         }
     }
 }

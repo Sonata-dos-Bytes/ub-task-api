@@ -16,9 +16,14 @@ export interface UBTask {
   rawStart: string | null;
   dateStart: Date | null;
   rawEnd: string;
-  dateEnd: Date;
-  daysLeft: number;
-  status: StatusTask;
+  dateEnd: Date | null;
+  daysLeft: number | null;
+  status: StatusTask | null;
   dateDetailsInPortuguese: string | null;
   taskDetails: string | null;
+}
+
+export interface UBMatter {
+  title: string;
+  url: string;
 }
