@@ -18,11 +18,19 @@ export async function fetchUbProfile(
 }
 
 export async function fetchUbTasks(
-    login: string,
-    password: string
-  ): Promise<any> {
-    return handler.getTasks(login, password);
-  }
+  login: string,
+  password: string
+): Promise<any> {
+  return handler.getTasks(login, password);
+}
+
+export async function fetchUbMatters(
+  login: string,
+  password: string
+): Promise<any> {
+  return handler.getMatters(login, password);
+}
 
 // fetchUbProfile(LOGIN_TEST, PASSWORD_TEST);
-fetchUbTasks(LOGIN_TEST, PASSWORD_TEST);
+// fetchUbTasks(LOGIN_TEST, PASSWORD_TEST);
+fetchUbMatters(LOGIN_TEST, PASSWORD_TEST);

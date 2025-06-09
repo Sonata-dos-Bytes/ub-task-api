@@ -3,7 +3,7 @@ import { CustomError } from '@errors/error_types/CustomError';
 import { BaseHandler } from './BaseHandler';
 import { PuppeteerResult } from '../types/puppeteer';
 import { logger } from '@config/logger';
-import { UBProfile, UBTask } from '../types/eadUB';
+import { UBMatter, UBProfile, UBTask } from '../types/eadUB';
 import { getTaskDeadlineInfo, parsePortugueseDate } from '@utils/formattedDate';
 import { extractCommonFields, extractQuestionnaireFields, extractTaskFields } from '@services/eadUbTaskService';
 import { url } from 'inspector';
@@ -12,6 +12,7 @@ export class EADUbHandler extends BaseHandler {
         login: 'https://ead.unibalsas.edu.br/login/index.php',
         profile: 'https://ead.unibalsas.edu.br/user/profile.php',
         tasks: 'https://ead.unibalsas.edu.br/calendar/view.php?view=upcoming',
+        matters: 'https://ead.unibalsas.edu.br/my/',
     }
 
     private async webLogin(login: string, password: string): Promise<PuppeteerResult> {
@@ -116,7 +117,7 @@ export class EADUbHandler extends BaseHandler {
                 return (els as HTMLAnchorElement[]).map(el => el.href);
             });
 
-            const tasks: any = [];
+            const tasks: UBTask[] = [];
 
             for (const [index, taskUrl] of tasksRef.entries()) {
                 logger.info({ url: taskUrl }, `Navegando para tarefa ${index + 1}`);
@@ -132,7 +133,7 @@ export class EADUbHandler extends BaseHandler {
 
                 if (type === 'Tarefa') {
                     const { rawStart, rawEnd, dateStartObj, dateEndObj, dateDetails, dateDetailsInPortuguese, taskDetails } = await extractTaskFields(page);
-                    
+
                     tasks.push({
                         title,
                         matter,
@@ -141,7 +142,7 @@ export class EADUbHandler extends BaseHandler {
                         rawStart,
                         dateStart: dateStartObj,
                         rawEnd,
-                        dateEnd: dateEndObj,
+                        dateEnd: dateEndObj || null,
                         daysLeft: dateDetails?.daysLeft || null,
                         status: dateDetails?.status || null,
                         dateDetailsInPortuguese: dateDetailsInPortuguese,
@@ -149,16 +150,19 @@ export class EADUbHandler extends BaseHandler {
                     });
                 } else if (type === 'Questionário') {
                     const { rawEnd, dateEndObj, dateDetails, taskDetails } = await extractQuestionnaireFields(page);
-                    
+
                     tasks.push({
                         title,
                         matter,
                         url: taskUrl,
                         matterUrl,
+                        rawStart: '', 
+                        dateStart: null, 
                         rawEnd,
                         dateEnd: dateEndObj,
                         daysLeft: dateDetails?.daysLeft || null,
                         status: dateDetails?.status || null,
+                        dateDetailsInPortuguese: '',
                         taskDetails,
                     });
                 }
@@ -172,6 +176,42 @@ export class EADUbHandler extends BaseHandler {
         } finally {
             await browser.close();
             logger.info('Browser fechado após busca de tarefas');
+        }
+    }
+
+    public async getMatters(login: string, password: string): Promise<UBMatter[]> {
+        const { browser, page } = await this.webLogin(login, password);
+        try {
+            logger.info('Navegando para as matérias do usuário', { url: this.urls.matters });
+            await page.goto(this.urls.matters, { waitUntil: 'domcontentloaded' });
+            await page.waitForSelector('.mc_content_list', { timeout: 10000 });
+
+            const mattersRef = await page.$$eval('.mcc_view', els => {
+                return (els as HTMLAnchorElement[]).map(el => el.href);
+            });
+
+            const matters: UBMatter[] = [];
+
+            for (const [index, matterUrl] of mattersRef.entries()) {
+                logger.info({ url: matterUrl }, `Navegando para matéria ${index + 1}`);
+                await page.goto(matterUrl, { waitUntil: 'domcontentloaded' });
+
+                const title = await page.$eval('.breadcrumb_title', el => (el as HTMLElement).textContent?.trim() || 'Matéria sem título');
+
+                matters.push({
+                    title,
+                    url: matterUrl,
+                });
+            }
+
+            logger.info('Matérias obtidas com sucesso');
+            return matters;
+        } catch (err) {
+            logger.error({ err }, 'Erro ao buscar matérias');
+            throw new CustomError('Matters fetch failed', ['Unable to parse matters data']);
+        } finally {
+            await browser.close();
+            logger.info('Browser fechado após busca de matérias');
         }
     }
 }
