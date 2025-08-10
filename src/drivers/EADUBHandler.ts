@@ -1,11 +1,11 @@
 import puppeteer, { Browser, Page, LaunchOptions } from 'puppeteer';
-import { CustomError } from '@errors/error_types/CustomError';
-import { BaseHandler } from './BaseHandler';
-import { PuppeteerResult } from '../types/puppeteer';
-import { logger } from '@config/logger';
-import { UBMatter, UBProfile, UBTask } from '../types/eadUB';
-import { getTaskDeadlineInfo, parsePortugueseDate } from '@utils/formattedDate';
-import { extractCommonFields, extractQuestionnaireFields, extractTaskFields } from '@services/eadUbTaskService';
+import { CustomError } from '../errors/error_types/CustomError.js'; 
+import { BaseHandler } from './BaseHandler.js'; 
+import { PuppeteerResult } from '../types/puppeteer.js'; 
+import { logger } from '../config/logger.js';
+import { UBMatter, UBProfile, UBTask } from '../types/eadUB.js';
+import { getTaskDeadlineInfo, parsePortugueseDate } from '../utils/formattedDate.js';
+import { extractCommonFields, extractQuestionnaireFields, extractTaskFields } from '../services/eadUbTaskService.js';
 import { url } from 'inspector';
 export class EADUbHandler extends BaseHandler {
     private urls = {
@@ -40,10 +40,10 @@ export class EADUbHandler extends BaseHandler {
                 throw new CustomError('Unauthorized', ['Invalid login credentials'], 401);
             }
 
-            logger.info('Login realizado com sucesso', { url: page.url() });
+            logger.info(`Login realizado com sucesso. URL: ${page.url()}`);
             return { browser, page };
         } catch (err) {
-            logger.error('Erro no fluxo de login', err);
+            logger.error({ err }, 'Erro no fluxo de login');
             throw err;
         } finally {
             if (!page || page.url().includes('login')) {
@@ -56,7 +56,7 @@ export class EADUbHandler extends BaseHandler {
     public async getProfile(login: string, password: string): Promise<UBProfile> {
         const { browser, page } = await this.webLogin(login, password);
         try {
-            logger.info('Navegando para perfil do usuário', { url: this.urls.profile });
+            logger.info({ url: this.urls.profile }, 'Navegando para perfil do usuário');
             await page.goto(this.urls.profile, { waitUntil: 'domcontentloaded' });
 
             const details = await page.$$eval(
@@ -110,7 +110,7 @@ export class EADUbHandler extends BaseHandler {
     public async getTasks(login: string, password: string): Promise<UBTask[]> {
         const { browser, page } = await this.webLogin(login, password);
         try {
-            logger.info('Navegando para as matérias do usuário', { url: this.urls.matters });
+            logger.info({ url: this.urls.matters }, 'Navegando para as matérias do usuário');
             await page.goto(this.urls.matters, { waitUntil: 'domcontentloaded' });
             await page.waitForSelector('.mc_content_list', { timeout: 10000 });
             
@@ -209,7 +209,7 @@ export class EADUbHandler extends BaseHandler {
     public async getMatters(login: string, password: string): Promise<UBMatter[]> {
         const { browser, page } = await this.webLogin(login, password);
         try {
-            logger.info('Navegando para as matérias do usuário', { url: this.urls.matters });
+            logger.info({ url: this.urls.matters }, 'Navegando para as matérias do usuário');
             await page.goto(this.urls.matters, { waitUntil: 'domcontentloaded' });
             await page.waitForSelector('.mc_content_list', { timeout: 10000 });
 

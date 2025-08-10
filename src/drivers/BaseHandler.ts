@@ -1,6 +1,6 @@
 import puppeteer, { Browser, Page, LaunchOptions } from 'puppeteer';
-import { getPuppeteerOptions } from '../config/puppeteer';
-import { CustomError } from '../errors/error_types/CustomError';
+import { getPuppeteerOptions } from '../config/puppeteer.js'; 
+import { CustomError } from '../errors/error_types/CustomError.js'; 
 
 export class BaseHandler {
   private async launchBrowser(): Promise<Browser> {

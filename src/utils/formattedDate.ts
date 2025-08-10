@@ -1,4 +1,4 @@
-import { StatusTask, TaskDeadlineInfo } from '../types/enum';
+import { StatusTask, TaskDeadlineInfo } from '../types/enum.js';
 import { differenceInCalendarDays, parse } from 'date-fns';
 import { pt } from 'date-fns/locale';
 

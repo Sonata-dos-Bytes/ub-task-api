@@ -1,4 +1,4 @@
-import { StatusTask } from "./enum";
+import { StatusTask } from "./enum.js";
 
 export interface UBProfile {
   name: string;

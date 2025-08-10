@@ -1,4 +1,4 @@
-import { ApiResponse } from '../types/apiResponse';
+import { ApiResponse } from '../types/apiResponse.js';
 
 /**
  * Monta uma resposta de sucesso

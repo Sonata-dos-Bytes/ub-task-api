@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import eadUbRouter from './ub/ead.ub.route';
+import eadUbRouter from './ub/ead.ub.route.js';
 
 const router = Router();
 

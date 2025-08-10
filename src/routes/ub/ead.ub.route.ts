@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { getProfile, getTasks } from '../../controllers/ead.ub.controller'; // Adjust the path as needed
+import { getProfile, getTasks } from '../../controllers/ead.ub.controller.js'; // Adjust the path as needed
 
 const router = Router();
 
