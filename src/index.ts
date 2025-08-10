@@ -1,11 +1,11 @@
 import express from 'express';
 
-import { PORT } from './config';
-import { setupServer } from './config/server';
+import { PORT } from './config/index.js'; 
+import { setupServer } from './config/server.js';
 
-import appRouter from './routes/app.route';
-import ubRouter from './routes/ub.route';
-import { errorHandler } from '@errors/errorHandler';
+import appRouter from './routes/app.route.js';
+import ubRouter from './routes/ub.route.js';
+import { errorHandler } from './errors/errorHandler.js';
 
 const app = express();
 

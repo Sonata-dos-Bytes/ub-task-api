@@ -3,7 +3,7 @@ import cors from 'cors';
 import path, { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-import { corsOptions } from './cors';
+import { corsOptions } from './cors.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

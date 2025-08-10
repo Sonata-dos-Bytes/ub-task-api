@@ -1,6 +1,6 @@
 import puppeteer, { LaunchOptions } from 'puppeteer';
 import chromium from '@sparticuz/chromium';
-import { logger } from './logger';
+import { logger } from './logger.js';
 
 export async function getPuppeteerOptions(): Promise<LaunchOptions> {
   const isProduction = process.env.NODE_ENV === 'production';

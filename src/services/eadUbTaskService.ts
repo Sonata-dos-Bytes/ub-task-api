@@ -1,5 +1,5 @@
-import { TaskDeadlineInfo } from '../types/enum';
-import { getTaskDeadlineInfo, parsePortugueseDate } from '@utils/formattedDate';
+import { TaskDeadlineInfo } from '../types/enum.js';
+import { getTaskDeadlineInfo, parsePortugueseDate } from '../utils/formattedDate.js';
 import { Page } from 'puppeteer';
 
 export async function extractCommonFields(page: Page): Promise<{ title: string, matter: string, matterUrl: string }> {

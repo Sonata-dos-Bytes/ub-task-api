@@ -2,13 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import {
   fetchUbProfile,
   fetchUbTasks,
-} from '../scrapers/ead.ub.scraper';
-import { success, failure } from '@utils/response';
-import { CustomError } from '@errors/error_types/CustomError';
+} from '../scrapers/ead.ub.scraper.js';
+import { success, failure } from '../utils/response.js';
+import { CustomError } from '../errors/error_types/CustomError.js';
 import { z } from 'zod';
-import { profileSchema } from '@schemas/ead.ub.schema';
-import { cache } from '@config/cache';
-import { logger } from '@config/logger';
+import { profileSchema } from '../schemas/ead.ub.schema.js';
+import { cache } from '../config/cache.js';
+import { logger } from '../config/logger.js';
 
 /**
  * POST ub/ead-ub/profile
